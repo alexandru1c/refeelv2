@@ -1,14 +1,21 @@
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { initializeApp } from 'firebase/app'; // Import Firebase app initialization
+import { initializeAuth, getReactNativePersistence } from 'firebase/auth'; // Import Firebase Auth methods
+import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage for persistence
 
+// Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyAMITE-fUiZ9gEXyOLHwtX19FsSnSnR0Lk", // From API_KEY
-  authDomain: "refeel-fad1a.firebaseapp.com",       // PROJECT_ID + firebaseapp.com
-  projectId: "refeel-fad1a",                        // From PROJECT_ID
-  storageBucket: "refeel-fad1a.firebasestorage.app", // From STORAGE_BUCKET
-  messagingSenderId: "570671868607",                // From GCM_SENDER_ID
-  appId: "1:570671868607:ios:2044148d59198c93e6f40a", // From GOOGLE_APP_ID
+  apiKey: "AIzaSyAMITE-fUiZ9gEXyOLHwtX19FsSnSnR0Lk", 
+  authDomain: "refeel-fad1a.firebaseapp.com",       
+  projectId: "refeel-fad1a",                        
+  storageBucket: "refeel-fad1a.firebasestorage.app", 
+  messagingSenderId: "570671868607",                
+  appId: "1:570671868607:ios:2044148d59198c93e6f40a", 
 };
 
+// Initialize Firebase App
 const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+
+// Initialize Firebase Auth with persistence
+export const auth = initializeAuth(app, {
+  persistence: getReactNativePersistence(ReactNativeAsyncStorage) // Use AsyncStorage for auth persistence
+});
