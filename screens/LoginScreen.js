@@ -12,7 +12,7 @@ export default function LoginScreen({ navigation }) {
   const handleLogin = async () => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      navigation.navigate('Balance');
+      navigation.navigate('Home');
     } catch (error) {
       Alert.alert('Login Failed', error.message);
     }
@@ -38,7 +38,7 @@ export default function LoginScreen({ navigation }) {
       />
       <Button title="Login" onPress={handleLogin} />
       <Button title="Signup" onPress={() => navigation.navigate('Signup')} />
-      <Button title="Home" onPress={() => navigation.navigate('Home')} />
+      <Button title="Home" onPress={() => navigation.navigate('Welcome')} />
     </View>
   );
 }

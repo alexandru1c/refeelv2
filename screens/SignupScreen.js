@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Button, TextInput, View, Alert, StyleSheet } from 'react-native';
+import { Alert, StyleSheet } from 'react-native';
+import { Layout, Input, Button, Text } from '@ui-kitten/components';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { supabase } from './../supabase'; // Assuming supabase client is also correctly initialized
 
@@ -15,9 +16,7 @@ export default function SignupScreen({ navigation }) {
       // If user does not exist, create a new record in Supabase
       const { error: insertError } = await supabase
         .from('users')
-        .insert([
-          { name: name, balance: 0, email:email },
-        ]);
+        .insert([{ name: name, balance: 0, email: email }]);
       if (insertError) {
         console.error('Error inserting user data into Supabase:', insertError);
       }
@@ -29,15 +28,18 @@ export default function SignupScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
-          <TextInput
+    <Layout style={styles.container}>
+      <Text category='h1' style={styles.header}>
+        Signup
+      </Text>
+      <Input
         style={styles.input}
-        placeholder="Nume"
+        placeholder="Name"
         value={name}
         onChangeText={setName}
         autoCapitalize="none"
       />
-      <TextInput
+      <Input
         style={styles.input}
         placeholder="Email"
         value={email}
@@ -45,17 +47,25 @@ export default function SignupScreen({ navigation }) {
         keyboardType="email-address"
         autoCapitalize="none"
       />
-      <TextInput
+      <Input
         style={styles.input}
         placeholder="Password"
         value={password}
         onChangeText={setPassword}
-        secureTextEntry
+        secureTextEntry={true}
         autoCapitalize="none"
       />
-      <Button title="Signup" onPress={handleSignup} />
-      <Button title="Home" onPress={() => navigation.navigate('Home')} />
-    </View>
+      <Button style={styles.button} status="success" onPress={handleSignup}>
+        Signup
+      </Button>
+      <Button
+        style={styles.button}
+        appearance="outline"
+        onPress={() => navigation.navigate('Welcome')}
+      >
+        Home
+      </Button>
+    </Layout>
   );
 }
 
@@ -65,10 +75,14 @@ const styles = StyleSheet.create({
     padding: 20,
     justifyContent: 'center',
   },
+  header: {
+    marginBottom: 30,
+    alignSelf: 'center',
+  },
   input: {
-    height: 50,
-    borderWidth: 1,
     marginBottom: 20,
-    paddingLeft: 10,
+  },
+  button: {
+    marginBottom: 15,
   },
 });

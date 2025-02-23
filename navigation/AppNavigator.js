@@ -31,7 +31,7 @@ export default function AppNavigator() {
       {user ? (
         // Authenticated user stack
         <Stack.Navigator>
-          <Stack.Screen name="Home" component={HomeScreen} />
+          <Stack.Screen name="Home" component={WelcomeScreen} />
         </Stack.Navigator>
       ) : (
         // Unauthenticated user stack
