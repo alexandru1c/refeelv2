@@ -22,19 +22,10 @@ export function FirebaseAuthProvider({ children }) {
         const { data, error } = await supabase
           .from('users')
           .select('*')
-          .eq('user_id', firebaseUser.uid)
+          .eq('email', firebaseUser.email)
           .single();
 
         if (error || !data) {
-          // If user does not exist, create a new record in Supabase
-          const { error: insertError } = await supabase
-            .from('users')
-            .insert([
-              { user_id: firebaseUser.uid, name: firebaseUser.displayName || 'New User', balance: 0 },
-            ]);
-          if (insertError) {
-            console.error('Error inserting user data into Supabase:', insertError);
-          }
         }
       } else {
         // User is signed out

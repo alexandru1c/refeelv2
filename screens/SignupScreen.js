@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Button, TextInput, View, Alert, StyleSheet } from 'react-native';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { supabase } from './../supabase'; // Assuming supabase client is also correctly initialized
 
 export default function SignupScreen({ navigation }) {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const auth = getAuth();
@@ -10,6 +12,15 @@ export default function SignupScreen({ navigation }) {
   const handleSignup = async () => {
     try {
       await createUserWithEmailAndPassword(auth, email, password);
+      // If user does not exist, create a new record in Supabase
+      const { error: insertError } = await supabase
+        .from('users')
+        .insert([
+          { name: name, balance: 0, email:email },
+        ]);
+      if (insertError) {
+        console.error('Error inserting user data into Supabase:', insertError);
+      }
       Alert.alert('Success', 'Account created. Please log in.');
       navigation.navigate('Login');
     } catch (error) {
@@ -19,6 +30,13 @@ export default function SignupScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+          <TextInput
+        style={styles.input}
+        placeholder="Nume"
+        value={name}
+        onChangeText={setName}
+        autoCapitalize="none"
+      />
       <TextInput
         style={styles.input}
         placeholder="Email"
