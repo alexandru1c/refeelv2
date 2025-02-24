@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, FlatList, TouchableOpacity, Image } from 'react-native';
+import { StyleSheet, FlatList, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { Layout, Card, Text, Spinner } from '@ui-kitten/components';
 import { supabase } from './../../supabase';
 
-// Create a static mapping for restaurant logos.
-// Keys must match your folder names (all lowercase, no spaces).
+// Static mapping for restaurant logos using folder names under assets/restaurants.
 const restaurantImages = {
   mitzu: require('../../assets/restaurants/mitzu/logo.png'),
   mcdonalds: require('../../assets/restaurants/mcdonalds/logo.png'),
-  // Add additional mappings for each restaurant folder as needed
+  // Add additional mappings as needed.
 };
 
 const getRestaurantLogo = (restaurantName) => {
   const key = restaurantName.toLowerCase().replace(/\s+/g, '');
+  console.log("Using key:", key);
   return restaurantImages[key] || require('../../assets/restaurants/default.png');
 };
 
@@ -37,16 +37,19 @@ export default function RestaurantsScreen({ navigation }) {
   }, []);
 
   const renderItem = ({ item }) => (
-    <TouchableOpacity onPress={() => navigation.navigate('RestaurantDetail', { restaurant: item })}>
+    <TouchableOpacity
+      style={styles.itemContainer}
+      onPress={() => navigation.navigate('RestaurantDetail', { restaurant: item })}
+    >
       <Card style={styles.card} status="basic">
         <Image
           source={getRestaurantLogo(item.name)}
-          style={styles.logo}
+          style={[styles.logo, { backgroundColor: '#eee' }]}
           resizeMode="contain"
         />
-        <Text category="h6">{item.name}</Text>
+        <Text category="h6" style={styles.itemTitle}>{item.name}</Text>
         {item.description && (
-          <Text appearance="hint">{item.description}</Text>
+          <Text appearance="hint" style={styles.itemDescription}>{item.description}</Text>
         )}
       </Card>
     </TouchableOpacity>
@@ -64,14 +67,19 @@ export default function RestaurantsScreen({ navigation }) {
     <Layout style={styles.container}>
       <Text category='h1' style={styles.header}>Restaurants</Text>
       <FlatList
+        key="2"
         data={restaurants}
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderItem}
+        numColumns={2}
         contentContainerStyle={styles.list}
       />
     </Layout>
   );
 }
+
+const windowWidth = Dimensions.get('window').width;
+const cardWidth = (windowWidth - 48) / 2; // (16*2 padding + 16 between cards)
 
 const styles = StyleSheet.create({
   container: {
@@ -93,14 +101,29 @@ const styles = StyleSheet.create({
   list: {
     paddingBottom: 80,
   },
-  card: {
-    marginBottom: 16,
-    alignItems: 'center',
-    padding: 16,
+  itemContainer: {
+    flex: 1,
+    margin: 8,
   },
-  logo: {
-    width: 80,
-    height: 80,
-    marginBottom: 10,
+  card: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    alignItems: 'center',
+    padding: 0,
+    width: cardWidth,
+  },
+    logo: {
+        width: cardWidth,
+        height: cardWidth,
+    },
+  itemTitle: {
+    marginTop: 8,
+    textAlign: 'center',
+    paddingHorizontal: 8,
+  },
+  itemDescription: {
+    textAlign: 'center',
+    marginBottom: 8,
+    paddingHorizontal: 8,
   },
 });
