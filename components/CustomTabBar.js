@@ -19,8 +19,8 @@ const CustomTabBar = ({ state, navigation }) => {
         navigation.navigate(routeName);
       }}
       style={[styles.bottomNavigation, { paddingBottom: insets.bottom || 10 }]}
-      indicatorStyle={{ height: 0 }}  // Remove the indicator line
-    >
+      indicatorStyle={{ height:2, backgroundColor: 'transparent'}}
+      >
       <BottomNavigationTab icon={MapIcon} style={styles.tab} />
       <BottomNavigationTab icon={RestaurantsIcon} style={styles.tab} />
       <BottomNavigationTab icon={HistoryIcon} style={styles.tab} />
@@ -32,7 +32,8 @@ const CustomTabBar = ({ state, navigation }) => {
 const styles = StyleSheet.create({
   bottomNavigation: {
     height: 70,         // Base height for larger tap area
-    borderTopWidth: 0,  // Remove the dividing line at the top
+    borderTopWidth: 0,
+    borderTopColor: '#ccc',
     elevation: 0,       // Remove Android shadow if any
   },
   tab: {
