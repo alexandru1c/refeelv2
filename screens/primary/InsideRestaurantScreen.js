@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, FlatList, Image } from 'react-native';
+import { StyleSheet, FlatList, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { Layout, Card, Text, Spinner } from '@ui-kitten/components';
 import { supabase } from './../../supabase';
 
@@ -21,27 +21,40 @@ export default function InsideRestaurantScreen({ route, navigation }) {
     setLoading(false);
   };
 
-   useEffect(() => {
-       setProducts([]);
-       setLoading(true);
-       fetchProducts();
-     }, [restaurant.id]);
+  useEffect(() => {
+    setProducts([]);
+    setLoading(true);
+    fetchProducts();
+  }, [restaurant.id]);
 
   const renderProductItem = ({ item }) => (
-    <Card style={styles.productCard} status="basic">
-      <Image
-        source={{ uri: item.image_url }}
-        style={styles.productLogo}
-        resizeMode="cover"
-      />
-      <Text category="s1" style={styles.productName}>{item.name}</Text>
+    <TouchableOpacity
+      style={styles.itemContainer}
+      onPress={() => navigation.navigate('ProductDetail', { product: item })}
+    >
+      <Layout style={styles.card}>
+        <Image
+          source={{ uri: item.image_url }}
+          style={styles.logo}
+          resizeMode="cover"
+        />
+      </Layout>
+      <Text category="h6" style={styles.itemTitle}>{item.name}</Text>
       {item.price && (
-        <Text appearance="hint" style={styles.productPrice}>
+        <Text appearance="hint" style={styles.itemPrice}>
           {item.price} RON
         </Text>
       )}
-    </Card>
+    </TouchableOpacity>
   );
+
+  if (loading) {
+    return (
+      <Layout style={styles.loadingContainer}>
+        <Spinner size="giant" />
+      </Layout>
+    );
+  }
 
   return (
     <Layout style={styles.container}>
@@ -54,21 +67,20 @@ export default function InsideRestaurantScreen({ route, navigation }) {
         )}
       </Card>
       <Text category="h5" style={styles.productsHeader}>Products</Text>
-      {loading ? (
-        <Layout style={styles.loadingContainer}>
-          <Spinner size="giant" />
-        </Layout>
-      ) : (
-        <FlatList
-          data={products}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={renderProductItem}
-          contentContainerStyle={styles.productsList}
-        />
-      )}
+      <FlatList
+      key="2"
+        data={products}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={renderProductItem}
+        numColumns={2}
+        contentContainerStyle={styles.productsList}
+      />
     </Layout>
   );
 }
+
+const windowWidth = Dimensions.get('window').width;
+const cardWidth = (windowWidth - 48) / 2; // accounts for padding and margins
 
 const styles = StyleSheet.create({
   container: {
@@ -92,22 +104,28 @@ const styles = StyleSheet.create({
   productsList: {
     paddingBottom: 80,
   },
-  productCard: {
-    marginBottom: 12,
-    borderRadius: 12,
+  itemContainer: {
+    flex: 1,
+    margin: 8,
+    alignItems: 'center',
+  },
+  card: {
+    borderRadius: 16,
     overflow: 'hidden',
-    padding: 0,
+    width: cardWidth,
+    height: cardWidth,
+    backgroundColor: '#fff',
   },
-  productLogo: {
+  logo: {
     width: '100%',
-    height: 200,
+    height: '100%',
   },
-  productName: {
+  itemTitle: {
     marginTop: 8,
     textAlign: 'center',
     paddingHorizontal: 8,
   },
-  productPrice: {
+  itemPrice: {
     textAlign: 'center',
     marginBottom: 8,
     paddingHorizontal: 8,
