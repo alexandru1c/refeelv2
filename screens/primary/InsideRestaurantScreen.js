@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, FlatList, TouchableOpacity, Image, Dimensions } from 'react-native';
-import { Layout, Card, Text, Spinner } from '@ui-kitten/components';
+import { StyleSheet, FlatList, TouchableOpacity, Image, Dimensions, Alert } from 'react-native';
+import { Layout, Card, Text, Spinner, Button, Icon } from '@ui-kitten/components';
 import { supabase } from './../../supabase';
+
+const PlusIcon = (props) => <Icon {...props} name="plus-outline" />;
 
 export default function InsideRestaurantScreen({ route, navigation }) {
   const { restaurant } = route.params;
@@ -27,6 +29,10 @@ export default function InsideRestaurantScreen({ route, navigation }) {
     fetchProducts();
   }, [restaurant.id]);
 
+  const handleAddProduct = (product) => {
+    Alert.alert("Produs adaugat", `${product.name} a fost adaugat in cosul de cumparaturi.`);
+  };
+
   const renderProductItem = ({ item }) => (
     <TouchableOpacity
       style={styles.itemContainer}
@@ -37,6 +43,12 @@ export default function InsideRestaurantScreen({ route, navigation }) {
           source={{ uri: item.image_url }}
           style={styles.logo}
           resizeMode="cover"
+        />
+        <Button 
+          style={styles.addButton} 
+          accessoryLeft={PlusIcon} 
+          appearance="ghost"
+          onPress={() => handleAddProduct(item)}
         />
       </Layout>
       <Text category="h6" style={styles.itemTitle}>{item.name}</Text>
@@ -58,17 +70,9 @@ export default function InsideRestaurantScreen({ route, navigation }) {
 
   return (
     <Layout style={styles.container}>
-      <Card style={styles.restaurantCard} status="basic" disabled={true}>
-        <Text category="h4">
-          {restaurant.displayName || restaurant.name}
-        </Text>
-        {restaurant.description && (
-          <Text appearance="hint">{restaurant.description}</Text>
-        )}
-      </Card>
-      <Text category="h5" style={styles.productsHeader}>Products</Text>
+      <Text category='h5' style={styles.productsHeader}>Products</Text>
       <FlatList
-      key="2"
+        key="2"
         data={products}
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderProductItem}
@@ -80,7 +84,7 @@ export default function InsideRestaurantScreen({ route, navigation }) {
 }
 
 const windowWidth = Dimensions.get('window').width;
-const cardWidth = (windowWidth - 48) / 2; // accounts for padding and margins
+const cardWidth = (windowWidth - 48) / 2;
 
 const styles = StyleSheet.create({
   container: {
@@ -88,13 +92,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#F7F9FC',
     padding: 16,
   },
-  restaurantCard: {
-    marginBottom: 16,
-    padding: 16,
-    borderRadius: 16,
-  },
   productsHeader: {
     marginBottom: 8,
+    textAlign: 'left',
+    color: '#000',
   },
   loadingContainer: {
     flex: 1,
@@ -115,10 +116,31 @@ const styles = StyleSheet.create({
     width: cardWidth,
     height: cardWidth,
     backgroundColor: '#fff',
+    position: 'relative',
   },
   logo: {
     width: '100%',
     height: '100%',
+  },
+  addButton: {
+    position: 'absolute',
+    bottom: 8,
+    right: 8,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    // iOS shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    // Android elevation
+    elevation: 4,
   },
   itemTitle: {
     marginTop: 8,

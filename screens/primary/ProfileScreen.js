@@ -88,7 +88,7 @@ export default function ProfileScreen({ navigation }) {
   return (
     <Layout style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.balanceText}>Your Balance: {balance}</Text>
+        <Text style={styles.balanceText}>Balanta: {balance} coins</Text>
         <TextInput
           style={styles.input}
           value={amountToAdd}
