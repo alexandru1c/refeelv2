@@ -37,22 +37,19 @@ export default function RestaurantsScreen({ navigation }) {
   }, []);
 
   const renderItem = ({ item }) => (
-    <TouchableOpacity
-      style={styles.itemContainer}
-      onPress={() => navigation.navigate('RestaurantDetail', { restaurant: item })}
-    >
-      <Card style={styles.card} status="basic">
-        <Image
-          source={getRestaurantLogo(item.name)}
-          style={[styles.logo, { backgroundColor: '#eee' }]}
-          resizeMode="contain"
-        />
-        <Text category="h6" style={styles.itemTitle}>{item.name}</Text>
-        {item.description && (
-          <Text appearance="hint" style={styles.itemDescription}>{item.description}</Text>
-        )}
-      </Card>
-    </TouchableOpacity>
+<TouchableOpacity
+  style={styles.itemContainer}
+  onPress={() => navigation.navigate('InsideRestaurant', { restaurant: item })}
+>
+  <Layout style={styles.card}>
+    <Image
+      source={getRestaurantLogo(item.name)}
+      style={styles.logo}
+      resizeMode="cover"
+    />
+  </Layout>
+  <Text category="h6" style={styles.itemTitle}>{item.displayName}</Text>
+</TouchableOpacity>
   );
 
   if (loading) {
@@ -95,8 +92,8 @@ const styles = StyleSheet.create({
   header: {
     marginTop: 50,
     marginBottom: 16,
-    textAlign: 'center',
-    color: '#1976D2',
+    textAlign: 'left',
+    color: '#000',
   },
   list: {
     paddingBottom: 80,
@@ -104,26 +101,23 @@ const styles = StyleSheet.create({
   itemContainer: {
     flex: 1,
     margin: 8,
-  },
-  card: {
-    borderRadius: 16,
-    overflow: 'hidden',
     alignItems: 'center',
-    padding: 0,
-    width: cardWidth,
   },
-    logo: {
-        width: cardWidth,
-        height: cardWidth,
-    },
+card: {
+  borderRadius: 16,
+  overflow: 'hidden',
+  width: cardWidth,
+  height: cardWidth,
+  padding: 0,
+  marginBottom: 8,
+},
+  logo: {
+    width: '100%',
+    height: '100%',
+  },
   itemTitle: {
     marginTop: 8,
     textAlign: 'center',
-    paddingHorizontal: 8,
-  },
-  itemDescription: {
-    textAlign: 'center',
-    marginBottom: 8,
     paddingHorizontal: 8,
   },
 });
