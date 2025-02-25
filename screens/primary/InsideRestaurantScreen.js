@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, FlatList, TouchableOpacity, Image, Dimensions, Alert } from 'react-native';
 import { Layout, Card, Text, Spinner, Button, Icon } from '@ui-kitten/components';
 import { supabase } from './../../supabase';
+import { useCart } from './../../CartContext'; // Adjust the path as needed
 
 const PlusIcon = (props) => <Icon {...props} name="plus-outline" />;
 
@@ -9,6 +10,7 @@ export default function InsideRestaurantScreen({ route, navigation }) {
   const { restaurant } = route.params;
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { cartItems, addToCart } = useCart();
 
   const fetchProducts = async () => {
     const { data, error } = await supabase
@@ -19,6 +21,8 @@ export default function InsideRestaurantScreen({ route, navigation }) {
       console.error('Error fetching products:', error);
     } else {
       setProducts(data);
+      console.log("alex")
+      console.log(data)
     }
     setLoading(false);
   };
@@ -29,32 +33,34 @@ export default function InsideRestaurantScreen({ route, navigation }) {
     fetchProducts();
   }, [restaurant.id]);
 
-  const handleAddProduct = (product) => {
-    Alert.alert("Produs adaugat", `${product.name} a fost adaugat in cosul de cumparaturi.`);
-  };
-
   const renderProductItem = ({ item }) => (
     <TouchableOpacity
       style={styles.itemContainer}
-      onPress={() => navigation.navigate('ProductDetail', { product: item })}
+      // Instead of navigating to ProductDetail, we add the product to the cart.
+      onPress={() => addToCart(item)}
     >
-      <Layout style={styles.card}>
+      <Card style={styles.card} status="basic">
         <Image
           source={{ uri: item.image_url }}
           style={styles.logo}
           resizeMode="cover"
         />
-        <Button 
-          style={styles.addButton} 
-          accessoryLeft={PlusIcon} 
+        <Button
+          style={styles.addButton}
+          accessoryLeft={PlusIcon}
           appearance="ghost"
-          onPress={() => handleAddProduct(item)}
+          onPress={() => addToCart(item)}
         />
-      </Layout>
+      </Card>
       <Text category="h6" style={styles.itemTitle}>{item.name}</Text>
       {item.price && (
         <Text appearance="hint" style={styles.itemPrice}>
           {item.price} RON
+        </Text>
+      )}
+      {item.coins && (
+        <Text appearance="hint" style={styles.itemPrice}>
+          {item.coins} coins
         </Text>
       )}
     </TouchableOpacity>
@@ -79,6 +85,12 @@ export default function InsideRestaurantScreen({ route, navigation }) {
         numColumns={2}
         contentContainerStyle={styles.productsList}
       />
+      {cartItems.length > 0 && (
+        <TouchableOpacity style={styles.cartButton} onPress={() => navigation.navigate('CartScreen')}>
+          <Icon name="shopping-cart-outline" style={styles.cartIcon} fill="#fff" />
+          <Text style={styles.cartCount}>{cartItems.length}</Text>
+        </TouchableOpacity>
+      )}
     </Layout>
   );
 }
@@ -151,5 +163,27 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 8,
     paddingHorizontal: 8,
+  },
+  cartButton: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    backgroundColor: '#1976D2',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'row',
+    paddingHorizontal: 8,
+    elevation: 5,
+  },
+  cartIcon: {
+    width: 24,
+    height: 24,
+  },
+  cartCount: {
+    color: '#fff',
+    marginLeft: 4,
   },
 });

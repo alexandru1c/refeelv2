@@ -10,6 +10,8 @@ import SignupScreen from './screens/SignupScreen';
 import MainTabNavigator from './navigation/MainTabNavigator'; 
 import { FirebaseAuthProvider } from './firebaseContext';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { CartProvider } from './CartContext'; // adjust path as needed
+
 
 const Stack = createStackNavigator();
 
@@ -20,6 +22,7 @@ export default function App() {
     <FirebaseAuthProvider>
     <SafeAreaProvider>
       <ApplicationProvider {...eva} theme={eva.light}>
+          <CartProvider>
         <NavigationContainer>
           <Stack.Navigator
 
@@ -35,6 +38,7 @@ export default function App() {
             <Stack.Screen name="Main" component={MainTabNavigator} />
           </Stack.Navigator>
         </NavigationContainer>
+        </CartProvider>
       </ApplicationProvider>
     </SafeAreaProvider>
     </FirebaseAuthProvider>
