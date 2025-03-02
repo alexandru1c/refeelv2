@@ -1,13 +1,14 @@
 import React from 'react';
 import { StyleSheet, FlatList, View, Image } from 'react-native';
 import { Layout, Text, Button, Icon } from '@ui-kitten/components';
-import { useCart } from './../../CartContext'; // Ensure the correct path
+import { useCart } from './../../CartContext';
 
 export default function CartScreen() {
-  const { cartItems = [], addToCart, decreaseQuantity, increaseQuantity, removeFromCart } = useCart();
+  const { cartItems, addToCart, decreaseQuantity, increaseQuantity, removeFromCart } = useCart();
 
-  // Calculate total price
+  // Calculate total price and total coins
   const totalPrice = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const totalCoins = cartItems.reduce((sum, item) => sum + item.coins * item.quantity, 0);
 
   // Render each cart item
   const renderCartItem = ({ item }) => (
@@ -15,24 +16,24 @@ export default function CartScreen() {
       <Image source={{ uri: item.image_url }} style={styles.itemImage} resizeMode="cover" />
       <View style={styles.itemDetails}>
         <Text category="h6">{item.name}</Text>
-        <Text appearance="hint">{(item.price * item.quantity).toFixed(2)} RON</Text> 
-
-        {/* Quantity Controls */}
+        <Text appearance="hint">{(item.price * item.quantity).toFixed(2)} RON</Text>
+        <Text appearance="hint">{(item.coins * item.quantity).toFixed(2)} coins</Text>
+        
         <View style={styles.quantityContainer}>
-          <Button
+          <Button 
             style={styles.quantityButton}
             size="tiny"
             accessoryLeft={(props) => <Icon {...props} name="minus-outline" />}
             onPress={() => {
               if (item.quantity === 1) {
-                removeFromCart(item.id); // Removes item when quantity is 1
+                removeFromCart(item.id);
               } else {
                 decreaseQuantity(item.id);
               }
             }}
           />
           <Text style={styles.quantityText}>{item.quantity}</Text>
-          <Button
+          <Button 
             style={styles.quantityButton}
             size="tiny"
             accessoryLeft={(props) => <Icon {...props} name="plus-outline" />}
@@ -53,12 +54,15 @@ export default function CartScreen() {
         <>
           <FlatList
             data={cartItems}
-            keyExtractor={(item, index) => `${item.id}_${index}`} // Ensures a unique key
+            keyExtractor={(item) => item.id.toString()}
             renderItem={renderCartItem}
           />
-          {/* Total Price */}
-          <Text category="h6" style={styles.totalText}>Total: {totalPrice.toFixed(2)} RON</Text>
-          {/* Checkout Button */}
+          {/* Display total RON and total Coins */}
+          <View style={styles.totalContainer}>
+            <Text category="h6" style={styles.totalText}>Total: {totalPrice.toFixed(2)} RON</Text>
+            <Text category="h6" style={styles.totalText}>Total Coins: {totalCoins} coins</Text>
+          </View>
+          
           <Button style={styles.checkoutButton}>Order Now</Button>
         </>
       )}
@@ -105,18 +109,23 @@ const styles = StyleSheet.create({
   },
   quantityButton: {
     marginHorizontal: 6,
-    width: 30, // Smaller buttons
+    width: 30,
     height: 30,
   },
   quantityText: {
     marginHorizontal: 8,
     fontSize: 16,
   },
-  totalText: {
-    textAlign: 'right',
+  totalContainer: {
+    alignItems: 'center',
     marginTop: 16,
-    fontWeight: 'bold',
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderColor: '#ddd',
+  },
+  totalText: {
     fontSize: 18,
+    fontWeight: 'bold',
   },
   emptyCartText: {
     textAlign: 'center',
