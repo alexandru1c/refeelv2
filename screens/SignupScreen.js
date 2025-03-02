@@ -38,7 +38,7 @@ export default function SignupScreen({ navigation }) {
       // If user does not exist, create a new record in Supabase
       const { error: insertError } = await supabase
         .from('users')
-        .insert([{ name: name, balance: 0, email: email, userUuid: userUuid}]);
+        .insert([{ name: name, balance: 1000, email: email, userUuid: userUuid}]);
         
       if (insertError) {
         console.error('Error inserting user data into Supabase:', insertError);

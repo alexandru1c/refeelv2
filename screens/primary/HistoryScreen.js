@@ -120,7 +120,10 @@ export default function HistoryScreen() {
     if (status === 'cancelled') {
       return <Icon name="close-circle-outline" style={styles.statusIcon} fill="#FF3B30" />; // Red for cancelled
     }
-    return <Icon name="checkmark-circle-2-outline" style={styles.statusIcon} fill="#4CAF50" />; // Green for successful
+    if (status === 'successful') {
+      return <Icon name="checkmark-circle-2-outline" style={styles.statusIcon} fill="#4CAF50" />; // Green for successful
+    }
+    return <Icon name="close-circle-outline" style={styles.statusIcon} fill="#FF3B30" />; // Red for cancelled
   };
 
   const renderOrderItem = ({ item }) => (
