@@ -58,11 +58,16 @@ export default function HistoryScreen() {
             if (productsError) {
               throw new Error(productsError.message);
             }
-
-            productDetails = orderProducts.map(op => ({
-              ...op,
-              product: productsData.find(p => p.id === op.productId),
-            }));
+            productDetails = orderProducts.map(op => {
+              const product = productsData.find(p => p.id === op.productId);
+              return {
+                ...op,
+                product,
+                totalPrice: product ? (product.price || 0) * op.quantity : 0,  // Ensure numeric value
+                totalCoins: product ? (product.coins || 0) * op.quantity : 0,  // Ensure numeric value
+              };
+            });
+            
           }
 
           // Fetch restaurant details
@@ -115,10 +120,7 @@ export default function HistoryScreen() {
     if (status === 'cancelled') {
       return <Icon name="close-circle-outline" style={styles.statusIcon} fill="#FF3B30" />; // Red for cancelled
     }
-    if (status === 'successful') {
-      return <Icon name="checkmark-circle-2-outline" style={styles.statusIcon} fill="#4CAF50" />; // Red for cancelled
-    }
-    return <Icon name="close-circle-outline" style={styles.statusIcon} fill="#FF3B30" />; // Red for cancelled
+    return <Icon name="checkmark-circle-2-outline" style={styles.statusIcon} fill="#4CAF50" />; // Green for successful
   };
 
   const renderOrderItem = ({ item }) => (
@@ -141,8 +143,13 @@ export default function HistoryScreen() {
           <View>
             <Text>{product.product.name}</Text>
             <Text appearance="hint">Qty: {product.quantity}</Text>
-            <Text appearance="hint">Price: {product.product.price} RON</Text>
-            <Text appearance="hint">Coins: {product.product.coins}</Text>
+            <Text appearance="hint">
+  Total Price: {(product.totalPrice ? product.totalPrice.toFixed(2) : "0.00")} RON
+</Text>
+<Text appearance="hint">
+  Total Coins: {product.totalCoins ?? 0}
+</Text>
+
           </View>
         </View>
       ))}
@@ -247,4 +254,3 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
 });
-
