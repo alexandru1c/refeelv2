@@ -14,7 +14,6 @@ export default function SignupScreen({ navigation }) {
   const handleSignup = async () => {
     // Clear any previous email error
     setEmailError('');
-
     // Check if the email already exists in Supabase
     const { data: existingUsers, error: queryError } = await supabase
       .from('users')
@@ -35,10 +34,11 @@ export default function SignupScreen({ navigation }) {
 
     try {
       await createUserWithEmailAndPassword(auth, email, password);
+      const userUuid = auth.currentUser.uid;
       // If user does not exist, create a new record in Supabase
       const { error: insertError } = await supabase
         .from('users')
-        .insert([{ name: name, balance: 0, email: email }]);
+        .insert([{ name: name, balance: 0, email: email, userUuid: userUuid}]);
         
       if (insertError) {
         console.error('Error inserting user data into Supabase:', insertError);

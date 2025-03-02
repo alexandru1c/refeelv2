@@ -10,6 +10,8 @@ import ProfileScreen from '../screens/primary/ProfileScreen';
 import InsideRestaurantScreen from '../screens/primary/InsideRestaurantScreen';
 import CartScreen from '../screens/primary/CartScreen';
 import CustomTabBar from '../components/CustomTabBar';
+import OrderConfirmationScreen from '../screens/primary/OrderConfirmationScreen';
+
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -27,6 +29,7 @@ export default function MainTabNavigator() {
       <Tab.Screen name="Profile" component={ProfileScreen} />
       <Tab.Screen name="InsideRestaurant" component={InsideRestaurantScreen} />
       <Stack.Screen name="CartScreen" component={CartScreen} />
+      <Stack.Screen name="OrderConfirmationScreen" component={OrderConfirmationScreen} />
     </Tab.Navigator>
   );
 }
