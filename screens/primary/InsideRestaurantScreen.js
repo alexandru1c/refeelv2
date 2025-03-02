@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, FlatList, TouchableOpacity, Image, Dimensions, Alert } from 'react-native';
-import { Layout, Card, Text, Spinner, Button, Icon } from '@ui-kitten/components';
+import { Layout, Text, Spinner, Button, Icon } from '@ui-kitten/components';
 import { supabase } from './../../supabase';
-import { useCart } from './../../CartContext'; // Adjust the path as needed
+import { useCart } from './../../CartContext';
 
 const PlusIcon = (props) => <Icon {...props} name="plus-outline" />;
 
@@ -21,8 +21,6 @@ export default function InsideRestaurantScreen({ route, navigation }) {
       console.error('Error fetching products:', error);
     } else {
       setProducts(data);
-      console.log("alex")
-      console.log(data)
     }
     setLoading(false);
   };
@@ -33,13 +31,16 @@ export default function InsideRestaurantScreen({ route, navigation }) {
     fetchProducts();
   }, [restaurant.id]);
 
+  const handleAddProduct = (product) => {
+    addToCart(product);
+  };
+
   const renderProductItem = ({ item }) => (
     <TouchableOpacity
       style={styles.itemContainer}
-      // Instead of navigating to ProductDetail, we add the product to the cart.
-      onPress={() => addToCart(item)}
+      onPress={() => navigation.navigate('ProductDetail', { product: item })}
     >
-      <Card style={styles.card} status="basic">
+      <Layout style={styles.card}>
         <Image
           source={{ uri: item.image_url }}
           style={styles.logo}
@@ -49,9 +50,9 @@ export default function InsideRestaurantScreen({ route, navigation }) {
           style={styles.addButton}
           accessoryLeft={PlusIcon}
           appearance="ghost"
-          onPress={() => addToCart(item)}
+          onPress={() => handleAddProduct(item)}
         />
-      </Card>
+      </Layout>
       <Text category="h6" style={styles.itemTitle}>{item.name}</Text>
       {item.price && (
         <Text appearance="hint" style={styles.itemPrice}>
@@ -105,7 +106,8 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   productsHeader: {
-    marginBottom: 8,
+    marginTop: 50,
+    marginBottom: 16,
     textAlign: 'left',
     color: '#000',
   },
@@ -122,6 +124,7 @@ const styles = StyleSheet.create({
     margin: 8,
     alignItems: 'center',
   },
+  // Use Layout as a card with no internal padding:
   card: {
     borderRadius: 16,
     overflow: 'hidden',
@@ -134,6 +137,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+  // Plus button styled as a white circle with border & shadow:
   addButton: {
     position: 'absolute',
     bottom: 8,
@@ -146,12 +150,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#ccc',
-    // iOS shadow
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 2,
-    // Android elevation
     elevation: 4,
   },
   itemTitle: {
