@@ -1,57 +1,62 @@
 import React from 'react';
-import { StyleSheet, FlatList, Image, Alert } from 'react-native';
-import { Layout, Text, Button, Icon, Card } from '@ui-kitten/components';
-import { useCart } from './../../CartContext';
+import { StyleSheet, FlatList, View, Image } from 'react-native';
+import { Layout, Text, Button, Icon } from '@ui-kitten/components';
+import { useCart } from './../../CartContext'; // Ensure the correct path
 
-const TrashIcon = (props) => <Icon {...props} name="trash-2-outline" />;
+export default function CartScreen() {
+  const { cartItems, addToCart, decreaseQuantity, increaseQuantity, removeFromCart } = useCart();
+  
 
-export default function CartScreen({ navigation }) {
-  const { cartItems, removeFromCart, clearCart } = useCart();
-
-  const handleOrder = () => {
-    if (cartItems.length === 0) {
-      Alert.alert("Cart is empty", "Please add items before ordering.");
-      return;
-    }
-    Alert.alert("Order Placed", "Your order has been placed successfully!");
-    clearCart(); // Clears the cart after order placement
-    navigation.navigate('RestaurantsScreen'); // Redirect back to restaurants
-  };
-
+  // ✅ Render each cart item
   const renderCartItem = ({ item }) => (
-    <Card style={styles.cartItem}>
-      <Image source={{ uri: item.image_url }} style={styles.productImage} resizeMode="cover" />
-      <Layout style={styles.itemDetails}>
-        <Text category="s1">{item.name}</Text>
+    <View style={styles.itemContainer}>
+      <Image source={{ uri: item.image_url }} style={styles.itemImage} resizeMode="cover" />
+      <View style={styles.itemDetails}>
+        <Text category="h6">{item.name}</Text>
         <Text appearance="hint">{item.price} RON</Text>
+
+        {/* ✅ Quantity Controls */}
+        <View style={styles.quantityContainer}>
         <Button
-          style={styles.removeButton}
-          appearance="ghost"
-          status="danger"
-          accessoryLeft={TrashIcon}
-          onPress={() => removeFromCart(item.id)}
-        />
-      </Layout>
-    </Card>
+  accessoryLeft={(props) => <Icon {...props} name="minus-outline" />}
+  onPress={() => decreaseQuantity(item.id)} // ✅ Now correctly decreases quantity
+/>
+          <Text>{item.quantity}</Text>
+          <Button
+  accessoryLeft={(props) => <Icon {...props} name="plus-outline" />}
+  onPress={() => increaseQuantity(item.id)} // ✅ Now correctly increases quantity
+/>
+        </View>
+      </View>
+
+      {/* Remove Item Button */}
+      <Button
+        style={styles.removeButton}
+        status="danger"
+        size="tiny"
+        onPress={() => removeFromCart(item.product_id)}
+      >
+        Remove
+      </Button>
+    </View>
   );
 
   return (
     <Layout style={styles.container}>
-      <Text category="h5" style={styles.header}>Shopping Cart</Text>
+      <Text category="h5" style={styles.header}>Your Cart</Text>
       {cartItems.length === 0 ? (
-        <Text style={styles.emptyCart}>Your cart is empty</Text>
+        <Text style={styles.emptyCartText}>Your cart is empty.</Text>
       ) : (
-        <>
-          <FlatList
-            data={cartItems}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={renderCartItem}
-            contentContainerStyle={styles.cartList}
-          />
-          <Button style={styles.orderButton} onPress={handleOrder}>
-            Place Order
-          </Button>
-        </>
+        <FlatList
+  data={cartItems}
+  keyExtractor={(item) => item.id.toString()} // Ensures a unique key
+  renderItem={renderCartItem}
+/>
+      )}
+
+      {/* Checkout Button */}
+      {cartItems.length > 0 && (
+        <Button style={styles.checkoutButton}>Order Now</Button>
       )}
     </Layout>
   );
@@ -60,45 +65,52 @@ export default function CartScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F7F9FC',
     padding: 16,
+    backgroundColor: '#F7F9FC',
   },
   header: {
-    fontSize: 24,
-    fontWeight: 'bold',
     marginBottom: 16,
+    color: '#000',
   },
-  emptyCart: {
-    textAlign: 'center',
-    fontSize: 16,
-    color: 'gray',
-    marginTop: 50,
-  },
-  cartList: {
-    paddingBottom: 80,
-  },
-  cartItem: {
+  itemContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 16,
-    marginBottom: 12,
+    backgroundColor: '#fff',
     padding: 12,
+    borderRadius: 8,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 2,
   },
-  productImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 12,
+  itemImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 10,
     marginRight: 12,
   },
   itemDetails: {
     flex: 1,
   },
-  removeButton: {
-    alignSelf: 'flex-end',
+  quantityContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
   },
-  orderButton: {
+  quantityButton: {
+    marginHorizontal: 6,
+  },
+  removeButton: {
+    marginLeft: 10,
+  },
+  emptyCartText: {
+    textAlign: 'center',
+    marginTop: 50,
+    fontSize: 16,
+  },
+  checkoutButton: {
     marginTop: 20,
-    width: '100%',
-    borderRadius: 12,
   },
 });

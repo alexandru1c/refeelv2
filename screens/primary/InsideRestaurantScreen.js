@@ -81,7 +81,7 @@ export default function InsideRestaurantScreen({ route, navigation }) {
       <FlatList
         key="2"
         data={products}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => `${item.product_id}_${Math.random()}`}
         renderItem={renderProductItem}
         numColumns={2}
         contentContainerStyle={styles.productsList}
