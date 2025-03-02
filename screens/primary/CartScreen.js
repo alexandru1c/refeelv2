@@ -15,32 +15,38 @@ export default function CartScreen() {
     <View style={styles.itemContainer}>
       <Image source={{ uri: item.image_url }} style={styles.itemImage} resizeMode="cover" />
       <View style={styles.itemDetails}>
-        <Text category="h6">{item.name}</Text>
-        <Text appearance="hint">{(item.price * item.quantity).toFixed(2)} RON</Text>
-        <Text appearance="hint">{(item.coins * item.quantity).toFixed(2)} coins</Text>
-        
-        <View style={styles.quantityContainer}>
-          <Button 
-            style={styles.quantityButton}
-            size="tiny"
-            accessoryLeft={(props) => <Icon {...props} name="minus-outline" />}
-            onPress={() => {
-              if (item.quantity === 1) {
-                removeFromCart(item.id);
-              } else {
-                decreaseQuantity(item.id);
-              }
-            }}
-          />
-          <Text style={styles.quantityText}>{item.quantity}</Text>
-          <Button 
-            style={styles.quantityButton}
-            size="tiny"
-            accessoryLeft={(props) => <Icon {...props} name="plus-outline" />}
-            onPress={() => increaseQuantity(item.id)}
-          />
-        </View>
-      </View>
+  <Text category="h6">{item.name}</Text>
+  
+  <View style={styles.priceContainer}>
+    <Text appearance="hint">{(item.price * item.quantity).toFixed(2)} RON</Text>
+    {item.coins && (
+      <Text appearance="hint">{(item.coins * item.quantity)} coins</Text>
+    )}
+  </View>
+
+  {/* Quantity Controls */}
+  <View style={styles.quantityContainer}>
+    <Button
+      style={styles.quantityButton}
+      size="tiny"
+      accessoryLeft={(props) => <Icon {...props} name="minus-outline" />}
+      onPress={() => {
+        if (item.quantity === 1) {
+          removeFromCart(item.id);
+        } else {
+          decreaseQuantity(item.id);
+        }
+      }}
+    />
+    <Text style={styles.quantityText}>{item.quantity}</Text>
+    <Button
+      style={styles.quantityButton}
+      size="tiny"
+      accessoryLeft={(props) => <Icon {...props} name="plus-outline" />}
+      onPress={() => increaseQuantity(item.id)}
+    />
+  </View>
+</View>
     </View>
   );
 
@@ -80,38 +86,42 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     color: '#000',
   },
-  itemContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 2,
-  },
+itemContainer: {
+  flexDirection: 'row',
+  alignItems: 'center', // Ensure vertical alignment
+  justifyContent: 'space-between', // Space out elements
+  backgroundColor: '#fff',
+  padding: 12,
+  borderRadius: 8,
+  marginBottom: 12,
+  shadowColor: '#000',
+  shadowOpacity: 0.1,
+  shadowOffset: { width: 0, height: 2 },
+  shadowRadius: 4,
+  elevation: 2,
+},
   itemImage: {
     width: 60,
     height: 60,
     borderRadius: 10,
     marginRight: 12,
   },
-  itemDetails: {
-    flex: 1,
-  },
+itemDetails: {
+  flex: 1,
+  justifyContent: 'center', // Center content vertically
+  marginLeft: 10, // Adjust spacing from image
+},
   quantityContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 4,
   },
-  quantityButton: {
-    marginHorizontal: 6,
-    width: 30,
-    height: 30,
-  },
+quantityButton: {
+  marginHorizontal: 6,
+  width: 30,
+  height: 30,
+  borderRadius: 50, // Fully circular buttons
+},
   quantityText: {
     marginHorizontal: 8,
     fontSize: 16,
@@ -132,7 +142,18 @@ const styles = StyleSheet.create({
     marginTop: 50,
     fontSize: 16,
   },
-  checkoutButton: {
-    marginTop: 20,
-  },
+checkoutButton: {
+  marginTop: 20,
+  borderRadius: 25, // More rounded
+  paddingHorizontal: 20, // Reduce extra blue padding
+  paddingVertical: 10, // Make it smaller
+  alignSelf: 'center', // Center it
+},
+priceContainer: {
+  position: 'absolute',
+  bottom: 10, // Move it to the bottom
+  right: 10,  // Align to the right
+  alignItems: 'flex-end',
+},
+
 });

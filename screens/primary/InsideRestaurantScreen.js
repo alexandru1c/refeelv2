@@ -38,6 +38,8 @@ export default function InsideRestaurantScreen({ route, navigation }) {
 
   const totalCartQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const totalCartPrice = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const totalCartCoins = cartItems.reduce((sum, item) => sum + item.coins * item.quantity, 0);
+
 
   const renderProductItem = ({ item }) => (
     <TouchableOpacity style={styles.itemContainer}>
@@ -75,15 +77,19 @@ export default function InsideRestaurantScreen({ route, navigation }) {
         contentContainerStyle={styles.productsList}
       />
 
-      {cartItems.length > 0 && (
-        <TouchableOpacity style={styles.cartButton} onPress={() => navigation.navigate('CartScreen')}>
-          <View style={styles.cartInfo}>
-            <Text style={styles.cartText}>Your Cart</Text>
-            <Text style={styles.cartDetails}>{totalCartQuantity} items | {totalCartPrice.toFixed(2)} RON</Text>
-          </View>
-          <Icon name="shopping-cart-outline" style={styles.cartIcon} fill="#fff" />
-        </TouchableOpacity>
-      )}
+{cartItems.length > 0 && (
+  <TouchableOpacity style={styles.cartButton} onPress={() => navigation.navigate('CartScreen')}>
+    <View style={styles.cartInfo}>
+      <Text style={styles.cartText}>Your Cart</Text>
+      <Text style={styles.cartDetails}>
+        {totalCartQuantity} items | {totalCartPrice.toFixed(2)} RON | {totalCartCoins} coins
+      </Text>
+    </View>
+    <View style={styles.cartIconContainer}>
+    <Icon name="shopping-bag-outline" style={styles.cartIcon} fill="#2196F3" />
+    </View>
+  </TouchableOpacity>
+)}
     </Layout>
   );
 }
@@ -95,8 +101,45 @@ const styles = StyleSheet.create({
   card: { borderRadius: 16, width: Dimensions.get('window').width / 2 - 24, height: 150 },
   logo: { width: '100%', height: '100%' },
   addButton: { position: 'absolute', bottom: 8, right: 8 },
-  cartButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#1976D2', padding: 12, borderRadius: 30, position: 'absolute', bottom: 24, right: 24 },
-  cartIcon: { width: 24, height: 24, marginLeft: 8 },
-  cartText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  cartDetails: { color: '#fff', fontSize: 14 },
+cartButton: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  backgroundColor: '#2196F3',  // Modern blue shade
+  paddingVertical: 14, // Adjusted padding for better balance
+  paddingHorizontal: 20,
+  borderRadius: 40,  // More rounded for a smooth look
+  position: 'absolute',
+  bottom: 16,
+  left: 16,
+  right: 16,
+  elevation: 6, // Shadow effect
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.2,
+  shadowRadius: 4,
+},
+cartInfo: {
+  flex: 1,
+  alignItems: 'center',
+},
+cartText: {
+  color: '#fff',
+  fontSize: 16,
+  fontWeight: 'bold',
+},
+cartDetails: {
+  color: '#fff',
+  fontSize: 14,
+},
+cartIcon: {
+  width: 28,
+  height: 28,
+  tintColor: '#2196F3',  // Matching the button color
+},
+cartIconContainer: {
+  backgroundColor: '#fff',
+  borderRadius: 20,  // Circular background for icon
+  padding: 8,
+},
 });
