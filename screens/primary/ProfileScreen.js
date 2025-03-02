@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, StyleSheet, View, TextInput } from 'react-native';
-import { Layout, Button, Text } from '@ui-kitten/components';
+import { Alert, StyleSheet, View, Image } from 'react-native';
+import { Layout, Button, Text, Avatar, Spinner } from '@ui-kitten/components';
 import { getAuth, signOut } from 'firebase/auth';
-import { supabase } from './../../supabase'; // Ensure this is correctly configured
+import { supabase } from './../../supabase';
 
 export default function ProfileScreen({ navigation }) {
+  const [userName, setUserName] = useState(0);
   const [balance, setBalance] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [amountToAdd, setAmountToAdd] = useState('');
   const auth = getAuth();
   const user = auth.currentUser;
 
@@ -16,30 +16,20 @@ export default function ProfileScreen({ navigation }) {
     if (user) {
       const { data, error } = await supabase
         .from('users')
-        .select('balance')
+        .select('balance, name')
         .eq('email', user.email)
         .single();
 
+        console.log(data)
+
       if (error) {
-        console.error('Error fetching user balance:', error);
-        Alert.alert('Error', 'Could not fetch user balance');
+        console.error('Error fetching user data:', error);
+        Alert.alert('Error', 'Could not fetch user details');
       } else {
+        setUserName(data.name)
         setBalance(data.balance);
       }
       setLoading(false);
-    }
-  };
-
-  // Logout function
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      Alert.alert("Success", "You have successfully logged out");
-      setLoading(false);
-      navigation.reset({ index: 0, routes: [{ name: 'Welcome' }] });
-    } catch (error) {
-      console.error("Error logging out:", error);
-      Alert.alert("Logout Failed", "There was an issue logging out.");
     }
   };
 
@@ -47,58 +37,57 @@ export default function ProfileScreen({ navigation }) {
     fetchUserData();
   }, [user]);
 
-  // Refetch user data
-  const refetchData = async () => {
-    setLoading(true);
-    await fetchUserData();
-  };
-
-  // Add balance logic
-  const handleAddBalance = async () => {
-    const amount = parseFloat(amountToAdd);
-    if (isNaN(amount) || amount <= 0) {
-      Alert.alert('Invalid Amount', 'Please enter a valid amount to add.');
-      return;
-    }
-    if (user) {
-      const { data, error } = await supabase
-        .from('users')
-        .update({ balance: balance + amount })
-        .eq('email', user.email)
-        .single();
-
-      if (error) {
-        console.error('Error updating balance:', error);
-        Alert.alert('Error', 'Could not update balance');
-      } else {
-        await fetchUserData();
-        setAmountToAdd('');
-      }
-    }
+  // Logout function
+  const handleLogout = async () => {
+    Alert.alert(
+      "Confirm Logout",
+      "Are you sure you want to logout?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Logout", onPress: async () => {
+            try {
+              await signOut(auth);
+              navigation.reset({ index: 0, routes: [{ name: 'Welcome' }] });
+            } catch (error) {
+              Alert.alert("Logout Failed", "There was an issue logging out.");
+            }
+          } 
+        }
+      ]
+    );
   };
 
   if (loading) {
     return (
       <Layout style={styles.loadingContainer}>
-        <Text>Loading...</Text>
+        <Spinner size="large" />
       </Layout>
     );
   }
 
   return (
     <Layout style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.balanceText}>Balanta: {balance} coins</Text>
-        <TextInput
-          style={styles.input}
-          value={amountToAdd}
-          onChangeText={setAmountToAdd}
-          placeholder="Enter amount to add"
-          keyboardType="numeric"
+      {/* User Avatar */}
+      <View style={styles.profileSection}>
+        <Avatar 
+          source={require('./../../assets/user-default.png')} 
+          size="giant" 
+          style={styles.avatar} 
         />
-        <Button onPress={handleAddBalance}>Increase Balance</Button>
-        <Button onPress={refetchData} style={styles.refetchButton}>
-          Refetch Information
+        <Text category="h5" style={styles.userName}>{userName}</Text>
+        <Text appearance="hint" style={styles.userEmail}>{user.email}</Text>
+      </View>
+
+      {/* Balance Section */}
+      <View style={styles.balanceContainer}>
+        <Text category="h6" style={styles.balanceText}>Balance</Text>
+        <Text category="h4" style={styles.balanceAmount}>{balance} coins</Text>
+      </View>
+
+      {/* Action Buttons */}
+      <View style={styles.buttonContainer}>
+        <Button onPress={fetchUserData} style={styles.refetchButton}>
+          Refresh Balance
         </Button>
         <Button style={styles.logoutButton} status="danger" onPress={handleLogout}>
           Logout
@@ -108,42 +97,71 @@ export default function ProfileScreen({ navigation }) {
   );
 }
 
+// Styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  content: {
-    flex: 1,
+    padding: 20,
+    backgroundColor: '#F7F9FC',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  balanceText: {
-    fontSize: 24,
-    marginBottom: 40,
-    color: '#333',
+  profileSection: {
+    alignItems: 'center',
+    marginBottom: 30,
   },
-  input: {
-    height: 50,
+  avatar: {
+    width: 80,
+    height: 80,
+    marginBottom: 10,
+  },
+  userName: {
+    fontSize: 22,
+    fontWeight: 'bold',
+  },
+  userEmail: {
+    fontSize: 14,
+    color: '#6c757d',
+  },
+  balanceContainer: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 6,
+    elevation: 3,
+    alignItems: 'center',
     width: '100%',
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderRadius: 10,
     marginBottom: 20,
-    paddingHorizontal: 10,
+  },
+  balanceText: {
+    fontSize: 18,
+    color: '#6c757d',
+  },
+  balanceAmount: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: '#2196F3',
+  },
+  buttonContainer: {
+    width: '100%',
+    alignItems: 'center',
   },
   refetchButton: {
-    marginVertical: 10,
+    width: '100%',
+    marginBottom: 10,
+    borderRadius: 30,
   },
   logoutButton: {
     width: '100%',
     borderRadius: 30,
-    marginTop: 20,
   },
 });
+
