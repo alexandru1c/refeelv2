@@ -3,9 +3,8 @@ import React, { createContext, useState, useContext } from 'react';
 const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
-  const [cartItems, setCartItems] = useState([]);
+  const [cartItems, setCartItems] = useState([]); 
 
-  // ✅ Add to cart: If exists, increase quantity, otherwise add new item
   const addToCart = (product) => {
     setCartItems((prevCart) => {
       const existingItem = prevCart.find((item) => item.id === product.id);
@@ -18,39 +17,47 @@ export const CartProvider = ({ children }) => {
     });
   };
 
-  // ✅ Increase quantity
-  const increaseQuantity = (productId) => {
-    setCartItems((prevCart) =>
-      prevCart.map((item) =>
-        item.id === productId ? { ...item, quantity: item.quantity + 1 } : item
-      )
-    );
-  };
-
-  // ✅ Decrease quantity but keep at least 1
   const decreaseQuantity = (productId) => {
     setCartItems((prevCart) =>
-      prevCart.map((item) =>
-        item.id === productId
-          ? { ...item, quantity: item.quantity > 1 ? item.quantity - 1 : 1 }
-          : item
-      )
+      prevCart
+        .map((item) =>
+          item.id === productId
+            ? { ...item, quantity: item.quantity - 1 }
+            : item
+        )
+        .filter((item) => item.quantity > 0) // Remove item if quantity is 0
     );
   };
 
-  // ✅ Remove item from cart
+  const increaseQuantity = (productId) => {
+    setCartItems((prevCart) =>
+      prevCart
+        .map((item) =>
+          item.id === productId
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        )
+        .filter((item) => item.quantity > 0) // Remove item if quantity is 0
+    );
+  };
+
   const removeFromCart = (productId) => {
     setCartItems((prevCart) => prevCart.filter((item) => item.id !== productId));
   };
 
-  // ✅ Clear cart
   const clearCart = () => setCartItems([]);
 
   return (
-    <CartContext.Provider value={{ cartItems, addToCart, increaseQuantity, decreaseQuantity, removeFromCart, clearCart }}>
+    <CartContext.Provider value={{ cartItems, addToCart, decreaseQuantity, increaseQuantity, removeFromCart, clearCart }}>
       {children}
     </CartContext.Provider>
   );
 };
 
-export const useCart = () => useContext(CartContext);
+export const useCart = () => {
+  const context = useContext(CartContext);
+  if (!context) {
+    throw new Error("useCart must be used within a CartProvider");
+  }
+  return context;
+};

@@ -4,59 +4,63 @@ import { Layout, Text, Button, Icon } from '@ui-kitten/components';
 import { useCart } from './../../CartContext'; // Ensure the correct path
 
 export default function CartScreen() {
-  const { cartItems, addToCart, decreaseQuantity, increaseQuantity, removeFromCart } = useCart();
-  
+  const { cartItems = [], addToCart, decreaseQuantity, increaseQuantity, removeFromCart } = useCart();
 
-  // ✅ Render each cart item
+  // Calculate total price
+  const totalPrice = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  // Render each cart item
   const renderCartItem = ({ item }) => (
     <View style={styles.itemContainer}>
       <Image source={{ uri: item.image_url }} style={styles.itemImage} resizeMode="cover" />
       <View style={styles.itemDetails}>
         <Text category="h6">{item.name}</Text>
-        <Text appearance="hint">{item.price} RON</Text>
+        <Text appearance="hint">{(item.price * item.quantity).toFixed(2)} RON</Text> 
 
-        {/* ✅ Quantity Controls */}
+        {/* Quantity Controls */}
         <View style={styles.quantityContainer}>
-        <Button
-  accessoryLeft={(props) => <Icon {...props} name="minus-outline" />}
-  onPress={() => decreaseQuantity(item.id)} // ✅ Now correctly decreases quantity
-/>
-          <Text>{item.quantity}</Text>
           <Button
-  accessoryLeft={(props) => <Icon {...props} name="plus-outline" />}
-  onPress={() => increaseQuantity(item.id)} // ✅ Now correctly increases quantity
-/>
+            style={styles.quantityButton}
+            size="tiny"
+            accessoryLeft={(props) => <Icon {...props} name="minus-outline" />}
+            onPress={() => {
+              if (item.quantity === 1) {
+                removeFromCart(item.id); // Removes item when quantity is 1
+              } else {
+                decreaseQuantity(item.id);
+              }
+            }}
+          />
+          <Text style={styles.quantityText}>{item.quantity}</Text>
+          <Button
+            style={styles.quantityButton}
+            size="tiny"
+            accessoryLeft={(props) => <Icon {...props} name="plus-outline" />}
+            onPress={() => increaseQuantity(item.id)}
+          />
         </View>
       </View>
-
-      {/* Remove Item Button */}
-      <Button
-        style={styles.removeButton}
-        status="danger"
-        size="tiny"
-        onPress={() => removeFromCart(item.product_id)}
-      >
-        Remove
-      </Button>
     </View>
   );
 
   return (
     <Layout style={styles.container}>
       <Text category="h5" style={styles.header}>Your Cart</Text>
+
       {cartItems.length === 0 ? (
         <Text style={styles.emptyCartText}>Your cart is empty.</Text>
       ) : (
-        <FlatList
-  data={cartItems}
-  keyExtractor={(item) => item.id.toString()} // Ensures a unique key
-  renderItem={renderCartItem}
-/>
-      )}
-
-      {/* Checkout Button */}
-      {cartItems.length > 0 && (
-        <Button style={styles.checkoutButton}>Order Now</Button>
+        <>
+          <FlatList
+            data={cartItems}
+            keyExtractor={(item, index) => `${item.id}_${index}`} // Ensures a unique key
+            renderItem={renderCartItem}
+          />
+          {/* Total Price */}
+          <Text category="h6" style={styles.totalText}>Total: {totalPrice.toFixed(2)} RON</Text>
+          {/* Checkout Button */}
+          <Button style={styles.checkoutButton}>Order Now</Button>
+        </>
       )}
     </Layout>
   );
@@ -101,9 +105,18 @@ const styles = StyleSheet.create({
   },
   quantityButton: {
     marginHorizontal: 6,
+    width: 30, // Smaller buttons
+    height: 30,
   },
-  removeButton: {
-    marginLeft: 10,
+  quantityText: {
+    marginHorizontal: 8,
+    fontSize: 16,
+  },
+  totalText: {
+    textAlign: 'right',
+    marginTop: 16,
+    fontWeight: 'bold',
+    fontSize: 18,
   },
   emptyCartText: {
     textAlign: 'center',

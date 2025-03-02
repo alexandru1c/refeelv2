@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, FlatList, TouchableOpacity, Image, Dimensions, Alert } from 'react-native';
+import { StyleSheet, FlatList, TouchableOpacity, Image, Dimensions } from 'react-native';
 import { Layout, Text, Spinner, Button, Icon } from '@ui-kitten/components';
 import { supabase } from './../../supabase';
 import { useCart } from './../../CartContext';
@@ -17,10 +17,11 @@ export default function InsideRestaurantScreen({ route, navigation }) {
       .from('products')
       .select('*')
       .eq('restaurantId', restaurant.id);
+
     if (error) {
       console.error('Error fetching products:', error);
     } else {
-      setProducts(data);
+      setProducts(data || []);
     }
     setLoading(false);
   };
@@ -36,16 +37,9 @@ export default function InsideRestaurantScreen({ route, navigation }) {
   };
 
   const renderProductItem = ({ item }) => (
-    <TouchableOpacity
-      style={styles.itemContainer}
-      onPress={() => navigation.navigate('ProductDetail', { product: item })}
-    >
+    <TouchableOpacity style={styles.itemContainer}>
       <Layout style={styles.card}>
-        <Image
-          source={{ uri: item.image_url }}
-          style={styles.logo}
-          resizeMode="cover"
-        />
+        <Image source={{ uri: item.image_url }} style={styles.logo} resizeMode="cover" />
         <Button
           style={styles.addButton}
           accessoryLeft={PlusIcon}
@@ -54,16 +48,8 @@ export default function InsideRestaurantScreen({ route, navigation }) {
         />
       </Layout>
       <Text category="h6" style={styles.itemTitle}>{item.name}</Text>
-      {item.price && (
-        <Text appearance="hint" style={styles.itemPrice}>
-          {item.price} RON
-        </Text>
-      )}
-      {item.coins && (
-        <Text appearance="hint" style={styles.itemPrice}>
-          {item.coins} coins
-        </Text>
-      )}
+      {item.price && <Text appearance="hint" style={styles.itemPrice}>{item.price} RON</Text>}
+      {item.coins && <Text appearance="hint" style={styles.itemPrice}>{item.coins} coins</Text>}
     </TouchableOpacity>
   );
 
@@ -79,9 +65,8 @@ export default function InsideRestaurantScreen({ route, navigation }) {
     <Layout style={styles.container}>
       <Text category='h5' style={styles.productsHeader}>Products</Text>
       <FlatList
-        key="2"
         data={products}
-        keyExtractor={(item) => `${item.product_id}_${Math.random()}`}
+        keyExtractor={(item) => `${item.product_id || item.id}`} // ✅ Ensures unique key
         renderItem={renderProductItem}
         numColumns={2}
         contentContainerStyle={styles.productsList}
@@ -124,7 +109,6 @@ const styles = StyleSheet.create({
     margin: 8,
     alignItems: 'center',
   },
-  // Use Layout as a card with no internal padding:
   card: {
     borderRadius: 16,
     overflow: 'hidden',
@@ -137,7 +121,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  // Plus button styled as a white circle with border & shadow:
   addButton: {
     position: 'absolute',
     bottom: 8,
