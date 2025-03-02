@@ -53,7 +53,7 @@ export default function CartScreen() {
         // Insert into Supabase
         const { data: order, error: orderError } = await supabase
             .from("orders")
-            .insert([{ userUuid, restaurantId, ronValue: totalPrice, coinsValue: totalCoins, qrCode }])
+            .insert([{ userUuid, restaurantId, ronValue: totalPrice, coinsValue: totalCoins, qrCode,  validated: "pending"  }])
             .select();
 
         if (orderError) {
@@ -87,6 +87,9 @@ export default function CartScreen() {
       } catch (error) {
         console.error("handleOrder Error:", error);
     }
+
+
+
   };
 
   // Render each cart item
