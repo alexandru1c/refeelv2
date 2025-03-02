@@ -8,7 +8,6 @@ import { v4 as uuidv4 } from 'uuid'; // Unique QR Code generator
 import { getAuth } from "firebase/auth";
 import 'react-native-get-random-values';
 
-
 export default function CartScreen() {
   const { cartItems, decreaseQuantity, increaseQuantity, removeFromCart, clearCart } = useCart();
   const navigation = useNavigation();
@@ -38,7 +37,18 @@ export default function CartScreen() {
             throw new Error("QR Code generation failed.");
         }
 
-        console.log("alex3");
+        console.log("Fetching restaurant name...");
+        const { data: restaurantData, error: restaurantError } = await supabase
+            .from("restaurants")
+            .select("displayName")
+            .eq("id", restaurantId)
+            .single();
+
+        if (restaurantError) {
+            throw new Error(`Error fetching restaurant name: ${restaurantError.message}`);
+        }
+
+        const restaurantName = restaurantData?.displayName || "the restaurant";
 
         // Insert into Supabase
         const { data: order, error: orderError } = await supabase
@@ -53,7 +63,7 @@ export default function CartScreen() {
         console.log("Order inserted successfully!", order);
 
         const orderId = order[0].id;
-        console.log(orderId)
+        console.log(orderId);
 
         // Insert order products
         const orderProducts = cartItems.map(item => ({
@@ -62,7 +72,7 @@ export default function CartScreen() {
             quantity: item.quantity,
         }));
 
-        console.log(orderProducts)
+        console.log(orderProducts);
         const { error: productsError } = await supabase.from("order_products").insert(orderProducts);
 
         if (productsError) {
@@ -73,12 +83,11 @@ export default function CartScreen() {
 
         // Clear cart and navigate
         clearCart();
-        navigation.navigate("OrderConfirmationScreen");
-    } catch (error) {
+        navigation.navigate("OrderConfirmationScreen", { qrCode, restaurantName });
+      } catch (error) {
         console.error("handleOrder Error:", error);
     }
-};
-
+  };
 
   // Render each cart item
   const renderCartItem = ({ item }) => (
@@ -147,6 +156,7 @@ export default function CartScreen() {
   );
 }
 
+// Styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -235,4 +245,3 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
 });
-
