@@ -3,7 +3,7 @@ import { Alert, StyleSheet, View, Image, TextInput, TouchableOpacity } from 'rea
 import { Layout, Button, Text, Avatar, Spinner, Icon } from '@ui-kitten/components';
 import { getAuth, signOut, updateProfile, updateEmail, updatePassword } from 'firebase/auth';
 import { supabase } from './../../supabase';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 
 export default function ProfileScreen() {
   const [userData, setUserData] = useState({ name: '', email: '', balance: 0 });
@@ -36,9 +36,17 @@ export default function ProfileScreen() {
     }
   };
 
-  useEffect(() => {
-    fetchUserData();
-  }, [user]);
+  // Trigger fetch when the screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchUserData();
+    }, [user])
+  );
+
+  // Rewards Store Navigation
+  const handleRewardsStore = () => {
+    navigation.navigate("RewardsStore");
+  };
 
   // Logout function
   const handleLogout = async () => {
@@ -143,6 +151,7 @@ export default function ProfileScreen() {
       <View style={styles.balanceContainer}>
         <Text category="h6" style={styles.balanceText}>Balance</Text>
         <Text category="h4" style={styles.balanceAmount}>{userData.balance} coins</Text>
+        <Button onPress={handleRewardsStore} style={styles.rewardsStoreButton}>Rewards Store</Button>
       </View>
 
       <View style={styles.passwordContainer}>
@@ -178,7 +187,6 @@ export default function ProfileScreen() {
   </View>
 </View>
 
-
       {/* Navigation Buttons */}
       <View style={styles.buttonContainer}>
         <Button style={styles.secondaryButton} onPress={() => navigation.navigate("HistoryScreen")}>
@@ -197,6 +205,10 @@ export default function ProfileScreen() {
 
 // Styles
 const styles = StyleSheet.create({
+  rewardsStoreButton: {
+    marginTop: 10,
+    backgroundColor: '#4CAF50',
+  },
   container: {
     flex: 1,
     padding: 20,
@@ -293,5 +305,4 @@ cancelButton: {
 greenButton: {
   backgroundColor: 'green',
 },
-
 });

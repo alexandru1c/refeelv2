@@ -35,7 +35,9 @@
     "react-native-svg": "15.8.0",
     "react-native-web": "~0.19.13",
     "supabase": "^2.6.8",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "react-native-maps": "1.18.0",
+    "expo-location": "~18.0.7"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"

@@ -8,16 +8,15 @@ import { v4 as uuidv4 } from 'uuid'; // Unique QR Code generator
 import { getAuth } from "firebase/auth";
 import 'react-native-get-random-values';
 
-export default function CartScreen() {
+export default function RewardsCartScreen() {
   const { cartItems, decreaseQuantity, increaseQuantity, removeFromCart, clearCart } = useCart();
   const navigation = useNavigation();
 
   // Calculate total price and total coins
-  const totalPrice = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const totalCoins = cartItems.reduce((sum, item) => sum + item.coins * item.quantity, 0);
 
-  // Handles order submission to Supabase
-  const handleOrder = async () => {
+  // Handles rewardOrder submission to Supabase
+  const handleRewardOrder = async () => {
     try {
         console.log("alex");
         console.log(cartItems.length);
@@ -51,41 +50,61 @@ export default function CartScreen() {
         const restaurantName = restaurantData?.displayName || "the restaurant";
 
         // Insert into Supabase
-        const { data: order, error: orderError } = await supabase
-            .from("orders")
-            .insert([{ userUuid, restaurantId, ronValue: totalPrice, coinsValue: totalCoins, qrCode,  validated: "pending"  }])
+        const { data: rewardOrder, error: rewardOrderError } = await supabase
+            .from("reward_orders")
+            .insert([{ userUuid, restaurantId, coinsValue: totalCoins, qrCode,  redeemed: "pending"  }])
             .select();
 
-        if (orderError) {
-            throw new Error(`Error inserting order: ${orderError.message}`);
+        if (rewardOrderError) {
+            throw new Error(`Error inserting rewardOrder: ${rewardOrderError.message}`);
         }
 
-        console.log("Order inserted successfully!", order);
+        console.log("rewardOrder inserted successfully!", rewardOrder);
 
-        const orderId = order[0].id;
-        console.log(orderId);
+        const rewardOrderId = rewardOrder[0].id;
+        console.log(rewardOrderId);
 
-        // Insert order products
-        const orderProducts = cartItems.map(item => ({
-            orderId: orderId,
+        // Insert rewardOrder products
+        const rewardOrderProducts = cartItems.map(item => ({
+            rewardOrderId: rewardOrderId,
             productId: item.id,
             quantity: item.quantity,
         }));
 
-        console.log(orderProducts);
-        const { error: productsError } = await supabase.from("order_products").insert(orderProducts);
+        console.log(rewardOrderProducts);
+        const { error: productsError } = await supabase.from("reward_products").insert(rewardOrderProducts);
 
         if (productsError) {
-            throw new Error(`Error inserting order products: ${productsError.message}`);
+            throw new Error(`Error inserting rewardOrder products: ${productsError.message}`);
         }
 
-        console.log("Order products inserted successfully!");
+        console.log("rewardOrder products inserted successfully!");
+
+        const { data } = await supabase
+        .from("users")
+        .select("balance")
+        .eq("userUuid", userUuid)
+        .single()
+
+        console.log("alexu")
+
+        console.log(data)
+
+        console.log(data.balance);
+        console.log(totalCoins)
+
+        const remaingBalance = data.balance - totalCoins;
+
+        const { error } = await supabase
+        .from('users')
+        .update({ balance: remaingBalance })
+        .eq('userUuid', userUuid)
 
         // Clear cart and navigate
         clearCart();
-        navigation.navigate("OrderConfirmation", { qrCode, restaurantName });
+        navigation.navigate("RewardConfirmation", { qrCode, restaurantName });
       } catch (error) {
-        console.error("handleOrder Error:", error);
+        console.error("handlerewardOrder Error:", error);
     }
 
 
@@ -100,7 +119,6 @@ export default function CartScreen() {
         <Text category="h6" style={styles.itemName}>{item.name}</Text>
         
         <View style={styles.priceContainer}>
-          <Text appearance="hint">{(item.price * item.quantity).toFixed(2)} RON</Text>
           {item.coins && <Text appearance="hint">{(item.coins * item.quantity)} coins</Text>}
         </View>
 
@@ -145,12 +163,11 @@ export default function CartScreen() {
           />
           {/* Display total RON and total Coins */}
           <View style={styles.totalContainer}>
-            <Text category="h6" style={styles.totalText}>Total: {totalPrice.toFixed(2)} RON</Text>
             <Text category="h6" style={styles.totalText}>Total Coins: {totalCoins} coins</Text>
           </View>
           
-          {/* Order Now Button */}
-          <Button style={styles.checkoutButton} onPress={() => handleOrder()}>
+          {/* rewardOrder Now Button */}
+          <Button style={styles.checkoutButton} onPress={() => handleRewardOrder()}>
           Order Now
           </Button>
         </>
