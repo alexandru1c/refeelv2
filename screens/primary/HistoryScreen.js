@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, FlatList, View, Image, Modal, TouchableOpacity } from 'react-native';
+import { StyleSheet, FlatList, View, Image, Modal, TouchableOpacity, Pressable } from 'react-native';
 import { Layout, Text, Spinner, Icon, Button } from '@ui-kitten/components';
 import { supabase } from './../../supabase';
 import { getAuth } from "firebase/auth";
@@ -8,15 +8,22 @@ import QRCode from 'react-native-qrcode-svg';
 
 export default function HistoryScreen() {
   const [orders, setOrders] = useState([]);
+  const [rewardOrders, setRewardOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedQRCode, setSelectedQRCode] = useState(null);
   const [selectedOrderStatus, setSelectedOrderStatus] = useState(null);
+  const [activeTab, setActiveTab] = useState('orders'); // "orders" or "rewards"
 
   useEffect(() => {
-    fetchOrders();
-  }, []);
+    if (activeTab === 'orders') {
+      fetchOrders();
+    } else {
+      fetchRewardOrders();
+    }
+  }, [activeTab]);
 
   const fetchOrders = async () => {
+    setLoading(true);
     try {
       const auth = getAuth();
       const userUuid = auth.currentUser?.uid;
@@ -110,11 +117,6 @@ export default function HistoryScreen() {
     }
   };
 
-  const handleCloseQRModal = () => {
-    setQrCode(null); // Ensures QR code input is reset AFTER closing
-    setIsQRModalVisible(false);
-  };
-
   const getStatusIcon = (status) => {
     if (status === 'pending') {
       return <Icon name="clock-outline" style={styles.statusIcon} fill="#FFA500" />; // Yellow for pending
@@ -128,23 +130,151 @@ export default function HistoryScreen() {
     return <Icon name="close-circle-outline" style={styles.statusIcon} fill="#FF3B30" />; // Red for cancelled
   };
 
+  const fetchRewardOrders = async () => {
+    setLoading(true);
+    try {
+      const auth = getAuth();
+      const userUuid = auth.currentUser?.uid;
+      if (!userUuid) {
+        console.error("User not logged in");
+        return;
+      }
+
+      const { data: rewardOrdersData } = await supabase
+        .from('reward_orders')
+        .select('*')
+        .eq('userUuid', userUuid)
+        .order('created_at', { ascending: false });
+
+      const enrichedRewards = await Promise.all(
+        rewardOrdersData.map(async (rewardOrder) => {
+          
+          const { data: rewardProducts } = await supabase
+            .from('reward_products')
+            .select('quantity, productId')
+            .eq('rewardOrderId', rewardOrder.id);
+
+          const productIds = rewardProducts.map(p => p.productId);
+          let productDetails = [];
+
+          if (productIds.length > 0) {
+            const { data: productsData } = await supabase
+              .from('products')
+              .select('id, name, image_url')
+              .in('id', productIds);
+
+            productDetails = rewardProducts.map(op => {
+              const product = productsData.find(p => p.id === op.productId);
+              return {
+                ...op,
+                product,
+              };
+            });
+          }
+
+          const { data: restaurant, error: restaurantError } = await supabase
+      .from('restaurants')
+      .select('name')
+      .eq('id', rewardOrder.restaurantId)
+      .single();
+
+    if (restaurantError) {
+      throw new Error(restaurantError.message);
+    }
+
+    const restaurantLogos = {
+      mitzu: require('./../../assets/restaurants/mitzu/logo.png'),
+      mcdonalds: require('./../../assets/restaurants/mcdonalds/logo.png'),
+    };
+
+    const getRestaurantLogo = (restaurantName) => {
+      return restaurantLogos[restaurantName.toLowerCase()] || require('./../../assets/restaurants/default.png');
+    };
+
+    const restaurantLogoPath = getRestaurantLogo(restaurant.name.toLowerCase());
+
+          return {
+            ...rewardOrder,
+            restaurant: {
+              ...restaurant,
+              logo: restaurantLogoPath,
+            },
+            products: productDetails || [],
+          };
+        })
+      );
+
+      setRewardOrders(enrichedRewards);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching reward orders:", error);
+      setLoading(false);
+    }
+  };
+
+
+  const renderTab = () => (
+    <View style={styles.tabContainer}>
+      <Pressable onPress={() => setActiveTab('orders')}>
+        <Text style={[styles.tab, activeTab === 'orders' && styles.activeTab]}>Orders</Text>
+      </Pressable>
+      <Text style={styles.separator}> | </Text>
+      <Pressable onPress={() => setActiveTab('rewards')}>
+        <Text style={[styles.tab, activeTab === 'rewards' && styles.activeTab]}>Rewards</Text>
+      </Pressable>
+    </View>
+  );
+  
+
+  const renderRewardItem = ({ item }) => (
+<View style={styles.orderContainer}>
+  <View style={styles.restaurantContainer}>
+    <Image source={item.restaurant.logo} style={styles.restaurantImage} />
+    <View style={{ marginLeft: 5 }}>
+  <Text category="h6">{item.restaurant.name}</Text>
+  <Text appearance="hint">{new Date(item.created_at).toLocaleString()}</Text>
+</View>
+    {getStatusIcon(item.redeemed)}
+  </View>
+  {item.products.map((product, index) => (
+  <View key={index} style={styles.productContainer}>
+    <Image source={{ uri: product.product.image_url }} style={styles.productImage} />
+    <View>
+      <Text>{product.quantity} x {product.product.name}</Text>
+    </View>
+  </View>
+))}
+
+<View style={styles.rewardSummary}>
+  <Text category="h6" >Redeemed coins: {item.coinsValue}</Text>
+  <View style={styles.rewardQrButtonContainer}>
+    <Button style={styles.qrButton} onPress={() => {
+      setSelectedQRCode(item.qrCode);
+      setSelectedOrderStatus(item.redeemed);
+    }}>
+      QR Code
+    </Button>
+  </View>
+</View>
+    </View>
+  );
+
   const renderOrderItem = ({ item }) => (
     <View style={styles.orderContainer}>
       <View style={styles.restaurantContainer}>
         <Image source={item.restaurant.logo} style={styles.restaurantImage} />
-        <View>
-          <Text category="h6">{item.restaurant.name}</Text>
-          <Text appearance="hint">Order Date: {new Date(item.created_at).toLocaleString()}</Text>
-        </View>
+        <View style={{ marginLeft: 5 }}>
+  <Text category="h6">{item.restaurant.name}</Text>
+  <Text appearance="hint">{new Date(item.created_at).toLocaleString()}</Text>
+</View>
         {getStatusIcon(item.validated)}
       </View>
-
+  
       {item.products.map((product, index) => (
         <View key={index} style={styles.productContainer}>
           <Image source={{ uri: product.product.image_url }} style={styles.productImage} />
           <View>
-            <Text>{product.product.name}</Text>
-            <Text appearance="hint">Qty: {product.quantity}</Text>
+            <Text>{product.quantity} x {product.product.name}</Text>
             <Text appearance="hint">
   Total Price: {(product.totalPrice ? product.totalPrice.toFixed(2) : "0.00")} RON
 </Text>
@@ -155,20 +285,20 @@ export default function HistoryScreen() {
           </View>
         </View>
       ))}
-
+  
       <View style={styles.orderSummary}>
-  <Text category="h6">Total: {item.ronValue.toFixed(2)} RON</Text>
-  <Text category="h6">Coins Earned: {item.coinsValue}</Text>
-  <View style={styles.qrButtonContainer}>
-  <Button style={styles.qrButton} onPress={() => {
-  setSelectedQRCode(item.qrCode);
+        <Text category="h6">Total: {item.ronValue.toFixed(2)} RON</Text>
+        <Text category="h6">Coins Earned: {item.coinsValue}</Text>
+        <View style={styles.qrButtonContainer}>
+          <Button style={styles.qrButton} onPress={() => {
+            setSelectedQRCode(item.qrCode);
   setSelectedOrderStatus(item.validated); // Store the order status
-}}>
-  QR Code
-</Button>
+          }}>
+            QR Code
+          </Button>
 
-  </View>
-</View>
+        </View>
+      </View>
 
     </View>
   );
@@ -190,19 +320,17 @@ export default function HistoryScreen() {
   return (
     <Layout style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
-        <Text category='h5' style={styles.header}>Orders List</Text>
+        {renderTab()}
       </SafeAreaView>
 
       {loading ? (
         <Spinner size="large" />
-      ) : orders.length === 0 ? (
-        <Text style={styles.noOrdersText}>No past orders found.</Text>
       ) : (
         <FlatList
-          data={orders}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={renderOrderItem}
-        />
+  data={activeTab === 'orders' ? orders : rewardOrders}
+  keyExtractor={(item) => item.id.toString()}
+  renderItem={activeTab === 'orders' ? renderOrderItem : renderRewardItem} 
+/>
       )}
 
       {/* QR Code Modal */}
@@ -221,9 +349,11 @@ export default function HistoryScreen() {
 )}
 
 {/* Order Status Label */}
-<View style={[styles.statusBadge, getStatusStyle(selectedOrderStatus)]}>
-  <Text style={styles.statusText}>{getStatusText(selectedOrderStatus)}</Text>
-</View>
+{selectedOrderStatus && (
+  <View style={[styles.statusBadge, getStatusStyle(selectedOrderStatus)]}>
+    <Text style={styles.statusText}>{getStatusText(selectedOrderStatus)}</Text>
+  </View>
+)}
 
           </View>
         </View>
@@ -260,12 +390,13 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  restaurantContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
+restaurantContainer: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between', // Keeps status icon on the right
+  marginBottom: 10,
+},
+
   restaurantImage: {
     width: 50,
     height: 50,
@@ -294,9 +425,22 @@ orderSummary: {
   paddingBottom: 10, // Adds spacing for the button
   position: 'relative', // Allows absolute positioning inside
 },
+rewardSummary: {
+  marginTop: 10,
+  borderTopWidth: 1,
+  borderColor: '#ddd',
+  paddingTop: 10,
+  paddingBottom: 10, // Adds spacing for the button
+  position: 'relative', // Allows absolute positioning inside
+},
 qrButtonContainer: {
   position: 'absolute',
   bottom: 10,
+  right: 10,
+},
+rewardQrButtonContainer: {
+  position: 'absolute',
+  top:5,
   right: 10,
 },
 
@@ -332,18 +476,41 @@ marginLeft: 10,
   },
   statusBadge: {
   marginTop: 15,
-  paddingVertical: 8,
-  paddingHorizontal: 16,
-  borderRadius: 20,
-  alignItems: 'center',
-  justifyContent: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  statusText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+
+  tabContainer: {
+  flexDirection: 'row', // Aligns items in a row
+  justifyContent: 'center', // Centers them
+  alignItems: 'center', // Aligns text vertically
+  marginBottom: 10, // Adds some spacing below the tabs
+},
+tab: {
+  fontSize: 18,
+  color: '#888', // Default color
+  paddingHorizontal: 10, // Adds some space between text
 },
 
-statusText: {
-  color: '#fff',
-  fontSize: 16,
-  fontWeight: 'bold',
+separator: {
+  fontSize: 18,
+  color: '#888', // Keeps it subtle
 },
+
+activeTab: {
+  fontWeight: 'bold', // Makes the active tab bold
+  color: '#000', // Changes color to black for active tab
+},
+
 
 });
 
