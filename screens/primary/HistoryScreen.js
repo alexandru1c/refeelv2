@@ -13,6 +13,8 @@ export default function HistoryScreen() {
   const [selectedQRCode, setSelectedQRCode] = useState(null);
   const [selectedOrderStatus, setSelectedOrderStatus] = useState(null);
   const [activeTab, setActiveTab] = useState('orders'); // "orders" or "rewards"
+  const [isQRModalVisible, setIsQRModalVisible] = useState(false);
+
 
   useEffect(() => {
     if (activeTab === 'orders') {
@@ -230,11 +232,14 @@ export default function HistoryScreen() {
 <View style={styles.orderContainer}>
   <View style={styles.restaurantContainer}>
     <Image source={item.restaurant.logo} style={styles.restaurantImage} />
-    <View style={{ marginLeft: 5 }}>
-  <Text category="h6">{item.restaurant.name}</Text>
-  <Text appearance="hint">{new Date(item.created_at).toLocaleString()}</Text>
+    <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+  <View style={{ marginLeft: 10 }}>
+    <Text category="h6">{item.restaurant.name}</Text>
+    <Text appearance="hint">{new Date(item.created_at).toLocaleString()}</Text>
+  </View>
+  {getStatusIcon(item.validated || item.redeemed)}
 </View>
-    {getStatusIcon(item.redeemed)}
+
   </View>
   {item.products.map((product, index) => (
   <View key={index} style={styles.productContainer}>
@@ -249,9 +254,11 @@ export default function HistoryScreen() {
   <Text category="h6" >Redeemed coins: {item.coinsValue}</Text>
   <View style={styles.rewardQrButtonContainer}>
     <Button style={styles.qrButton} onPress={() => {
-      setSelectedQRCode(item.qrCode);
-      setSelectedOrderStatus(item.redeemed);
-    }}>
+  setSelectedQRCode(item.qrCode);
+  setSelectedOrderStatus(item.validated || item.redeemed);
+  setIsQRModalVisible(true); // Show modal
+}}
+>
       QR Code
     </Button>
   </View>
@@ -263,11 +270,13 @@ export default function HistoryScreen() {
     <View style={styles.orderContainer}>
       <View style={styles.restaurantContainer}>
         <Image source={item.restaurant.logo} style={styles.restaurantImage} />
-        <View style={{ marginLeft: 5 }}>
-  <Text category="h6">{item.restaurant.name}</Text>
-  <Text appearance="hint">{new Date(item.created_at).toLocaleString()}</Text>
+        <View style={{ flex: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+  <View style={{ marginLeft: 10 }}>
+    <Text category="h6">{item.restaurant.name}</Text>
+    <Text appearance="hint">{new Date(item.created_at).toLocaleString()}</Text>
+  </View>
+  {getStatusIcon(item.validated)}
 </View>
-        {getStatusIcon(item.validated)}
       </View>
   
       {item.products.map((product, index) => (
@@ -291,9 +300,11 @@ export default function HistoryScreen() {
         <Text category="h6">Coins Earned: {item.coinsValue}</Text>
         <View style={styles.qrButtonContainer}>
           <Button style={styles.qrButton} onPress={() => {
-            setSelectedQRCode(item.qrCode);
-  setSelectedOrderStatus(item.validated); // Store the order status
-          }}>
+  setSelectedQRCode(item.qrCode);
+  setSelectedOrderStatus(item.validated || item.redeemed);
+  setIsQRModalVisible(true); // Show modal
+}}
+>
             QR Code
           </Button>
 
@@ -334,11 +345,11 @@ export default function HistoryScreen() {
       )}
 
       {/* QR Code Modal */}
-      <Modal visible={!!selectedQRCode} transparent animationType="fade">
-        <View style={styles.modalContainer}>
+      <Modal visible={isQRModalVisible} transparent animationType="fade">
+      <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <TouchableOpacity style={styles.closeButton} onPress={() => setSelectedQRCode(null)}>
-              <Icon name="close-outline" fill="black" style={styles.closeIcon} />
+          <TouchableOpacity style={styles.closeButton} onPress={() => setIsQRModalVisible(false)}>
+          <Icon name="close-outline" fill="black" style={styles.closeIcon} />
             </TouchableOpacity>
             <Text category="h5" style={styles.qrTitle}>Your QR Code</Text>
 
@@ -393,7 +404,6 @@ const styles = StyleSheet.create({
 restaurantContainer: {
   flexDirection: 'row',
   alignItems: 'center',
-  justifyContent: 'space-between', // Keeps status icon on the right
   marginBottom: 10,
 },
 
